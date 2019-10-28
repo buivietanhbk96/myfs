@@ -1,10 +1,11 @@
-#include "myfs.h"
-
-#include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdint.h>
+#include "myfs.h"
 
 int main(int argc, char *argv[])
 {
@@ -27,7 +28,10 @@ int main(int argc, char *argv[])
 	sb.magic = MYFS_MAGIC;
 	sb.block_size = MYFS_DEFAULT_BLOCK_SIZE;
 	sb.free_blocks = ~0;
-
+	sb.root_inode.mode = S_IFDIR;
+	sb.root_inode.inode_no = MYFS_ROOT_INODE_NUMBER;
+	sb.root_inode.data_block_number = MYFS_ROOTDIR_DATABLOCK_NUMBER;
+	sb.root_inode.dir_children_count = 0;
 	ret = write(fd, (char *)&sb, sizeof(sb));
 
 	/* Just a redundant check. Not required ideally. */
