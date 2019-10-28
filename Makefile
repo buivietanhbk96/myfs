@@ -1,5 +1,14 @@
-obj-m := myfs.o
-all:
-		make -C /lib/modules/$(shell uname -r)/build/ M=$(PWD) modules
+obj-m := myfilesystem.o
+myfilesystem-objs := myfs.o
+
+all: ko mkfs-myfs
+
+ko:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+
+mkfs-myfs_SOURCES:
+	mkfs-myfs.c myfs.h
+
 clean:
-	    make -C /lib/modules/$(shell uname -r)/build/ M=$(PWD) clean
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+	rm mkfs-myfs

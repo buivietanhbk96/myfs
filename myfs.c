@@ -5,11 +5,40 @@
 #include<linux/kernel.h>   /* Need for KERN_INFO */
 #include<linux/init.h>     /* Need for the macros */
 #include<linux/fs.h>       /* Need for filesystem */
+#include<linux/time.h>     /* For get current time */
+#include<linux/buffer_head.h> 
+
+#include"myfs.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("VANH");
-MODULE_DESCRIPTION("My first hello module!!!");
+MODULE_DESCRIPTION("My first hello filesystem !!!");
 MODULE_VERSION("0.1");
+
+
+static int myfs_iterate(struct file *filp, struct dir_context *ctx)
+{
+    /* ls will list nothing as of now */
+    return 0;
+}
+const struct file_operations myfs_dir_operations = 
+{
+    .owner = THIS_MODULE,
+    .iterate = myfs_iterate,
+};
+
+struct dentry *myfs_lookup(struct inode *parent_inode,
+                struct dentry *child_dentry, unsigned int flags)
+{
+    /* The lookup function is used for dentry association.
+     * As of now, we don't deal with dentries in myfs
+     * So we keep this simple for now and revisit later */
+    return NULL;
+}
+static struct inode_operations myfs_inode_ops = 
+{
+    .lookup = myfs_lookup,
+};
 
 struct inode *myfs_get_inode(struct super_block *sb,
         const struct inode *dir, umode_t mode,
@@ -21,7 +50,7 @@ struct inode *myfs_get_inode(struct super_block *sb,
         inode->i_ino = get_next_ino();
         inode_init_owner(inode, dir, mode);
 
-        //inode->i_atime = inode->i_mtime = inode->i_ctime = CURRENT_TIME;
+        inode->i_atime = inode->i_mtime = inode->i_ctime = current_time(inode);
         switch (mode & S_IFMT)
         {
             case S_IFDIR:
@@ -40,11 +69,34 @@ struct inode *myfs_get_inode(struct super_block *sb,
 int myfs_fill_super(struct super_block *sb, void *data, int silent)
 {
     struct inode *inode;
+    struct buffer_head *bh;
+    struct myfs_super_block *sb_disk;
 
+    bh = (struct buffer_head *)sb_bread(sb,0);
+    sb_disk = (struct myfs_super_block *)bh->b_data;
+    printk(KERN_INFO "The magic number obtained in disk is: [%d]\n",
+            sb_disk->magic);
+	if (unlikely(sb_disk->magic != MYFS_MAGIC)) {
+		printk(KERN_ERR
+		       "The filesystem that you try to mount is not of type myfs. Magicnumber mismatch.");
+		return -EPERM;
+	}
+
+	if (unlikely(sb_disk->block_size != MYFS_DEFAULT_BLOCK_SIZE)) {
+		printk(KERN_ERR
+		       "myfs seem to be formatted using a non-standard block size.");
+		return -EPERM;
+	}
+
+	printk(KERN_INFO
+	       "myfs filesystem of version [%d] formatted with a block size of [%d] detected in the device.\n",
+	       sb_disk->version, sb_disk->block_size);
     /* A magic number that uniquely identifies our filesystem type */
-    sb->s_magic = 0x25102019; /* today =)) */
+    sb->s_magic = MYFS_MAGIC; /* today =)) */
 
     inode = myfs_get_inode(sb, NULL, S_IFDIR, 0);
+    inode->i_op = &myfs_inode_ops;
+    inode->i_fop = &myfs_dir_operations;
     sb->s_root = d_make_root(inode);
     if(!sb->s_root)
     {
