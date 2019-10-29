@@ -1,5 +1,5 @@
 obj-m := myfilesystem.o
-myfilesystem-objs := myfs.o
+myfilesystem-objs := myfs.o dir.o file.o inode.o super.o
 
 all: ko mkfs-myfs
 
