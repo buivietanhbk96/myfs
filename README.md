@@ -35,9 +35,3 @@ echo hello_from_myfs > /mnt/test
 cat /mnt/test
 ...
 ```
-
-## More resources:
-See slide-deck from my presentation "Writing Linux FS4Fun"
-```bash
-./Documentation/WrittingFS4Fun.pdf
-```
