@@ -14,7 +14,7 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("VANH");
 MODULE_DESCRIPTION("My first hello filesystem !!!");
 MODULE_VERSION("0.1");
-struct kmem_cache *dmy_inode_cache = NULL;
+struct kmem_cache *myfs_inode_cache = NULL;
 struct file_system_type myfs_fs_type = 
 {
     .owner = THIS_MODULE,
@@ -25,7 +25,7 @@ struct file_system_type myfs_fs_type =
 };
 
 
-const struct file_operations myfs_dir_operations = 
+const struct file_operations myfs_dir_ops = 
 {
     .owner = THIS_MODULE,
     .iterate_shared = myfs_readdir,
